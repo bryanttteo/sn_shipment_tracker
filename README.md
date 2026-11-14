@@ -41,7 +41,7 @@ Automated shipment tracking across multiple forwarders, every 2 hours, with Tele
 ## Step 3 — Configure Environment
 
 ```bash
-cd /Users/bryanteo/Documents/ME/Ling/shipment-tracker-bot
+cd /Users/hashaway/Documents/shipment-tracker-bot
 cp .env.example .env
 ```
 
@@ -76,33 +76,26 @@ Log in with the credentials you set in `.env`.
 
 ---
 
-## Step 6 — Set TELEGRAM_CHAT_ID as n8n Variable
+## Step 6 — Import the Workflow
 
-1. Go to **Settings → Variables**
-2. Click **+ Add Variable**
-3. Name: `TELEGRAM_CHAT_ID`
-4. Value: your Chat ID (e.g. `123456789`)
-5. Save
+1. In n8n, go to **Workflows → Import from File** (or click the three dots `...` in the top right of a workflow canvas)
+2. Select [`shipment-tracker-workflow.json`](file:///Users/hashaway/Documents/shipment-tracker-bot/shipment-tracker-workflow.json) from this folder
+3. The workflow will load with all nodes pre-configured
 
 ---
 
-## Step 7 — Import the Workflow
+## Step 7 — Link Credential & Set Chat ID
 
-1. In n8n, go to **Workflows → Import from File**
-2. Select `shipment-tracker-workflow.json` from this folder
-3. The workflow loads with all nodes pre-configured
-
----
-
-## Step 8 — Link Telegram Credential
-
-1. Click the **"Send Telegram Notification"** node
-2. In the **Credential** dropdown, select the Telegram credential you created
-3. Close the node
+1. Click on the **"Send Telegram Notification"** node to open it
+2. Under **Credential to connect with**, select the Telegram credential you created in Step 5
+3. Check the **Chat ID** field:
+   - Ensure your Chat ID (e.g. `1955290878`) is entered there.
+   *(Since n8n Variables is a paid feature, we enter the Chat ID directly in this node!)*
+4. Close the node
 
 ---
 
-## Step 9 — Test It
+## Step 8 — Test It
 
 1. Click **"Execute Workflow"** (▶ button)
 2. You should receive a Telegram message for each shipment
@@ -111,7 +104,7 @@ Log in with the credentials you set in `.env`.
 
 ---
 
-## Step 10 — Activate
+## Step 9 — Activate
 
 Toggle the workflow to **Active** (top-right switch).
 

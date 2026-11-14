@@ -220,7 +220,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "chatId": "1955290878",
         "text": "={{ $json.telegramMessage }}",
         "additionalFields": {
           "parse_mode": "Markdown",
