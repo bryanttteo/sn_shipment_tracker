@@ -12,11 +12,14 @@
           ]
         }
       },
-      "id": "f1a2b3c4-0001-0001-0001-000000000001",
+      "id": "27f9a45e-511c-44e0-b2b9-42eaee33b943",
       "name": "Every 2 Hours",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [240, 300]
+      "position": [
+        0,
+        144
+      ]
     },
     {
       "parameters": {
@@ -25,115 +28,109 @@
             {
               "id": "assign-shipments",
               "name": "shipments",
-              "value": "=[\n  {\n    \"id\": \"DX52001620915\",\n    \"forwarder\": \"podtrack\",\n    \"label\": \"Thailand Shipment\",\n    \"trackUrl\": \"http://47.52.146.142/podtrack/Details.aspx?ID=DX52001620915\"\n  },\n  {\n    \"id\": \"MP0092805689\",\n    \"forwarder\": \"austway\",\n    \"label\": \"Australia Shipment\",\n    \"trackUrl\": \"https://track.austway-cargo.com\"\n  }\n]",
+              "value": "=[\n  {\n    \"id\": \"SG22200685456\",\n    \"forwarder\": \"podtrack\",\n    \"label\": \"Podtrack Shipment\",\n    \"trackUrl\": \"http://47.52.146.142/podtrack/Details.aspx?ID=SG22200685456\"\n  }\n]",
               "type": "array"
             }
           ]
         },
         "options": {}
       },
-      "id": "f1a2b3c4-0002-0002-0002-000000000002",
+      "id": "87a86bad-625f-41b1-9217-cedd82d56193",
       "name": "Shipment List",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [460, 300]
+      "position": [
+        224,
+        144
+      ]
     },
     {
       "parameters": {
         "fieldToSplitOut": "shipments",
         "options": {}
       },
-      "id": "f1a2b3c4-0003-0003-0003-000000000003",
+      "id": "57d6ba6b-f120-4713-9d8f-e4c7328d6483",
       "name": "Split Into Shipments",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [680, 300]
+      "position": [
+        448,
+        144
+      ]
     },
     {
       "parameters": {
         "rules": {
-          "rules": [
+          "values": [
             {
               "conditions": {
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
-                  "typeValidation": "strict"
+                  "typeValidation": "strict",
+                  "version": 2
                 },
                 "conditions": [
                   {
+                    "id": "a183ceea-c5a2-4032-87d2-688d70f79379",
                     "leftValue": "={{ $json.forwarder }}",
                     "rightValue": "podtrack",
                     "operator": {
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
                     }
                   }
                 ],
                 "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "podtrack"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict"
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.forwarder }}",
-                    "rightValue": "austway",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "austway"
+              }
             }
           ]
         },
         "options": {}
       },
-      "id": "f1a2b3c4-0004-0004-0004-000000000004",
+      "id": "c424b4ce-b501-4d4a-9181-d4771dd339f5",
       "name": "Route by Forwarder",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [900, 300]
+      "position": [
+        656,
+        144
+      ]
     },
     {
       "parameters": {
         "url": "=http://47.52.146.142/podtrack/Details.aspx?ID={{ $json.id }}",
         "options": {
-          "timeout": 30000,
           "response": {
             "response": {
               "responseFormat": "text"
             }
-          }
+          },
+          "timeout": 30000
         }
       },
-      "id": "f1a2b3c4-0005-0005-0005-000000000005",
+      "id": "96d20d3f-3c56-4492-89b9-7c9ddef8ab8a",
       "name": "Fetch Podtrack Page",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1120, 160]
+      "position": [
+        880,
+        0
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Parse Podtrack HTML response\nconst html = $input.item.json.data;\nconst prev = $('Split Into Shipments').item.json;\nconst shipmentId = prev.id || '';\nconst shipmentLabel = prev.label || 'Podtrack Shipment';\nconst trackUrl = prev.trackUrl || 'http://47.52.146.142/podtrack/Default.aspx';\n\n// Extract status\nconst statusMatch = html.match(/id=\"lblStatus\"[^>]*>\\s*:\\s*([^<]+)</);\nconst hawbMatch = html.match(/id=\"lblHawb\"[^>]*>\\s*:\\s*([^<]+)</);\nconst typeMatch = html.match(/id=\"lblservicetype\"[^>]*>\\s*:\\s*([^<]+)</);\n\nconst currentStatus = statusMatch ? statusMatch[1].trim() : 'Unknown';\nconst hawb = hawbMatch ? hawbMatch[1].trim() : shipmentId;\nconst serviceType = typeMatch ? typeMatch[1].trim() : '';\n\n// Extract all grid rows (tracking history)\n// GridView1_ctl02..ctlN_Label1/2/3/4 = Date/Time/Location/Activity\nconst dateMatches = [...html.matchAll(/GridView1_ctl\\d+_Label1[^>]*>([^<]+)</g)].map(m => m[1].trim());\nconst timeMatches = [...html.matchAll(/GridView1_ctl\\d+_Label2[^>]*>([^<]+)</g)].map(m => m[1].trim());\nconst locMatches  = [...html.matchAll(/GridView1_ctl\\d+_Label3[^>]*>([^<]+)</g)].map(m => m[1].trim());\nconst actMatches  = [...html.matchAll(/GridView1_ctl\\d+_Label4[^>]*>([^<]+)</g)].map(m => m[1].trim());\n\nconst rows = dateMatches.map((date, i) => ({\n  date,\n  time: timeMatches[i] || '',\n  location: locMatches[i] || '',\n  activity: actMatches[i] || ''\n}));\n\nconst latestEvent = rows.length > 0 ? rows[rows.length - 1] : null;\nconst fingerprint = `${currentStatus}|${latestEvent ? latestEvent.date + '|' + latestEvent.time + '|' + latestEvent.activity : 'none'}`;\n\nreturn {\n  json: {\n    shipmentId,\n    shipmentLabel,\n    forwarder: 'podtrack',\n    forwarderName: 'Thai Forwarder (Podtrack)',\n    flag: '\\u{1F1F9}\\u{1F1ED}',\n    currentStatus,\n    hawb,\n    serviceType,\n    latestEvent,\n    allEvents: rows,\n    fingerprint,\n    trackUrl\n  }\n};"
       },
-      "id": "f1a2b3c4-0006-0006-0006-000000000006",
+      "id": "8beef56c-207e-42ca-bc3a-379e6a5f1730",
       "name": "Parse Podtrack HTML",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1340, 160]
+      "position": [
+        1104,
+        0
+      ]
     },
     {
       "parameters": {
@@ -142,42 +139,40 @@
           "timeout": 30000
         }
       },
-      "id": "f1a2b3c4-0007-0007-0007-000000000007",
+      "id": "2519fec1-860b-4756-b302-212884ac8e31",
       "name": "Fetch Austway API",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1120, 440]
+      "position": [
+        880,
+        288
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Parse Austway JSON API response\nconst responseData = $input.item.json;\nconst prev = $('Split Into Shipments').item.json;\nconst shipmentId = prev.id || '';\nconst shipmentLabel = prev.label || 'Austway Shipment';\nconst trackUrl = prev.trackUrl || 'https://track.austway-cargo.com';\n\nlet allEvents = [];\nlet currentStatus = 'Unknown';\nlet latestEvent = null;\nlet deliveryOrderNo = shipmentId;\nlet customerOrderNo = '';\n\n// API returns an array directly\nconst arr = Array.isArray(responseData) ? responseData : (responseData.data || []);\n\nif (arr.length > 0) {\n  const shipment = arr[0];\n  deliveryOrderNo = shipment.deliveryOrderNo || shipmentId;\n  customerOrderNo = shipment.customerOrderNo || '';\n  const traces = shipment.traces || [];\n\n  const sorted = [...traces].sort((a, b) => (b.generatedTime || 0) - (a.generatedTime || 0));\n\n  allEvents = sorted.map(t => {\n    const d = t.generatedTime ? new Date(t.generatedTime) : null;\n    return {\n      date: d ? d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Australia/Sydney' }) : '',\n      time: d ? d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', timeZone: 'Australia/Sydney' }) : '',\n      location: t.location || '',\n      activity: t.content || t.status || '',\n      status: t.status || '',\n      generatedTime: t.generatedTime || 0\n    };\n  });\n\n  latestEvent = allEvents.length > 0 ? allEvents[0] : null;\n  currentStatus = latestEvent ? (latestEvent.status || latestEvent.activity) : 'Unknown';\n}\n\nconst fingerprint = latestEvent\n  ? `${latestEvent.status}|${latestEvent.activity}|${latestEvent.generatedTime}`\n  : 'no-data';\n\nreturn {\n  json: {\n    shipmentId,\n    shipmentLabel,\n    forwarder: 'austway',\n    forwarderName: 'Austway Cargo (AU)',\n    flag: '\\u{1F1E6}\\u{1F1FA}',\n    currentStatus,\n    deliveryOrderNo,\n    customerOrderNo,\n    latestEvent,\n    allEvents,\n    fingerprint,\n    trackUrl\n  }\n};"
       },
-      "id": "f1a2b3c4-0008-0008-0008-000000000008",
+      "id": "fd959225-67b7-4109-a9fd-0c4b5b94ec4d",
       "name": "Parse Austway Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1340, 440]
-    },
-    {
-      "parameters": {
-        "mode": "passThrough",
-        "output": "input1"
-      },
-      "id": "f1a2b3c4-0009-0009-0009-000000000009",
-      "name": "Merge Forwarder Outputs",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [1560, 300]
+      "position": [
+        1104,
+        288
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Compare fingerprint against stored value\n// Static Data persists across workflow executions (survives n8n restarts)\nconst staticData = $getWorkflowStaticData('global');\n\nconst shipmentId = $input.item.json.shipmentId;\nconst currentFingerprint = $input.item.json.fingerprint;\nconst storageKey = `fp_${shipmentId}`;\n\nconst storedFingerprint = staticData[storageKey] || null;\nconst hasUpdate = storedFingerprint === null || storedFingerprint !== currentFingerprint;\n\nreturn {\n  json: {\n    ...$input.item.json,\n    hasUpdate,\n    storedFingerprint,\n    currentFingerprint,\n    storageKey,\n    isFirstCheck: storedFingerprint === null\n  }\n};"
       },
-      "id": "f1a2b3c4-0010-0010-0010-000000000010",
+      "id": "fe5f5377-7d2d-4242-94a8-a2d3764b9086",
       "name": "Check For Update",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1780, 300]
+      "position": [
+        1536,
+        144
+      ]
     },
     {
       "parameters": {
@@ -185,7 +180,8 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict"
+            "typeValidation": "strict",
+            "version": 1
           },
           "conditions": [
             {
@@ -202,40 +198,50 @@
         },
         "options": {}
       },
-      "id": "f1a2b3c4-0011-0011-0011-000000000011",
+      "id": "442fc63d-4e40-417a-b551-0bbcd5e545af",
       "name": "Has New Update?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.1,
-      "position": [2000, 300]
+      "position": [
+        1760,
+        144
+      ]
     },
     {
       "parameters": {
         "jsCode": "// Build the Telegram message\nconst d = $input.item.json;\nconst latest = d.latestEvent;\n\nconst timeStr = latest && latest.date ? `${latest.date}${latest.time ? ', ' + latest.time : ''}` : '';\nconst locationStr = latest && latest.location && latest.location.trim() ? `\\n\\u{1F4CD} ${latest.location.trim()}` : '';\nconst activityStr = latest && latest.activity ? `\\n\\n_${latest.activity}_` : '';\n\nlet waybillLine = '';\nif (d.forwarder === 'austway') {\n  waybillLine = `Waybill: \\`${d.deliveryOrderNo}\\``;\n  if (d.customerOrderNo) waybillLine += `\\nRef: \\`${d.customerOrderNo}\\``;\n} else {\n  waybillLine = `Waybill: \\`${d.shipmentId}\\``;\n  if (d.serviceType) waybillLine += `\\nType: ${d.serviceType}`;\n}\n\nconst firstNote = d.isFirstCheck ? '\\n\\n\\u{1F50D} _First check — baseline recorded._' : '';\n\nconst lines = [\n  `${d.flag} *Shipment Update — ${d.forwarderName}*`,\n  `\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501`,\n  waybillLine,\n  `Status: *${d.currentStatus}*`,\n  timeStr ? `\\u{1F550} ${timeStr}` : null,\n  locationStr || null,\n  activityStr || null,\n  firstNote || null,\n  ``,\n  `\\u{1F517} [Track Shipment](${d.trackUrl})`\n].filter(x => x !== null).join('\\n');\n\nreturn {\n  json: {\n    ...$input.item.json,\n    telegramMessage: lines\n  }\n};"
       },
-      "id": "f1a2b3c4-0012-0012-0012-000000000012",
+      "id": "b75f0342-5d6a-48c1-977a-616cbd7d3fc6",
       "name": "Build Telegram Message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2220, 180]
+      "position": [
+        1984,
+        16
+      ]
     },
     {
       "parameters": {
         "chatId": "1955290878",
         "text": "={{ $json.telegramMessage }}",
         "additionalFields": {
-          "parse_mode": "Markdown",
-          "disable_web_page_preview": false
+          "disable_web_page_preview": false,
+          "parse_mode": "Markdown"
         }
       },
-      "id": "f1a2b3c4-0013-0013-0013-000000000013",
+      "id": "64e099a2-5e1b-4115-8319-412a54713154",
       "name": "Send Telegram Notification",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [2440, 180],
+      "position": [
+        2208,
+        16
+      ],
+      "webhookId": "435390f1-2509-4687-92fc-bbad72a7f8f6",
       "credentials": {
         "telegramApi": {
-          "id": "telegram-credential-id",
-          "name": "Telegram Bot"
+          "id": "uh0euwxsvOlzfDZe",
+          "name": "Telegram account"
         }
       }
     },
@@ -243,78 +249,182 @@
       "parameters": {
         "jsCode": "// Persist new fingerprint to Static Data\nconst staticData = $getWorkflowStaticData('global');\nstaticData[$input.item.json.storageKey] = $input.item.json.currentFingerprint;\nconsole.log(`[Tracker] Stored new fingerprint for ${$input.item.json.shipmentId}`);\nreturn $input.item;"
       },
-      "id": "f1a2b3c4-0014-0014-0014-000000000014",
+      "id": "1ef3f581-f015-4ad6-aaca-52922cb8964f",
       "name": "Store New Fingerprint",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2660, 180]
+      "position": [
+        2416,
+        16
+      ]
     },
     {
       "parameters": {
         "jsCode": "console.log(`[Tracker] No update for ${$input.item.json.shipmentId} (${$input.item.json.shipmentLabel}) — fingerprint unchanged`);\nreturn $input.item;"
       },
-      "id": "f1a2b3c4-0015-0015-0015-000000000015",
+      "id": "cec545c5-6861-45c3-b6ad-e733870a0919",
       "name": "No Update (Skip)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2220, 420]
+      "position": [
+        1984,
+        256
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Every 2 Hours": {
-      "main": [[{"node": "Shipment List", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Shipment List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Shipment List": {
-      "main": [[{"node": "Split Into Shipments", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Split Into Shipments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Split Into Shipments": {
-      "main": [[{"node": "Route by Forwarder", "type": "main", "index": 0}]]
-    },
-    "Route by Forwarder": {
       "main": [
-        [{"node": "Fetch Podtrack Page", "type": "main", "index": 0}],
-        [{"node": "Fetch Austway API", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Route by Forwarder",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Fetch Podtrack Page": {
-      "main": [[{"node": "Parse Podtrack HTML", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Parse Podtrack HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parse Podtrack HTML": {
-      "main": [[{"node": "Merge Forwarder Outputs", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Check For Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch Austway API": {
-      "main": [[{"node": "Parse Austway Response", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Parse Austway Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parse Austway Response": {
-      "main": [[{"node": "Merge Forwarder Outputs", "type": "main", "index": 1}]]
-    },
-    "Merge Forwarder Outputs": {
-      "main": [[{"node": "Check For Update", "type": "main", "index": 0}]]
+      "main": [
+        []
+      ]
     },
     "Check For Update": {
-      "main": [[{"node": "Has New Update?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Has New Update?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Has New Update?": {
       "main": [
-        [{"node": "Build Telegram Message", "type": "main", "index": 0}],
-        [{"node": "No Update (Skip)", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Build Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Update (Skip)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Build Telegram Message": {
-      "main": [[{"node": "Send Telegram Notification", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Send Telegram Notification": {
-      "main": [[{"node": "Store New Fingerprint", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Store New Fingerprint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Forwarder": {
+      "main": [
+        [
+          {
+            "node": "Fetch Podtrack Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "pinData": {},
+  "active": false,
   "settings": {
     "executionOrder": "v1",
-    "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner"
+    "binaryMode": "separate"
   },
-  "staticData": null,
-  "tags": [{"name": "shipment-tracker"}],
-  "triggerCount": 0,
-  "versionId": "1"
+  "versionId": "3516d16a-31a3-44c0-8422-b966d6506d31",
+  "meta": {
+    "instanceId": "854b70a357560a8299a82e913a29585f0911176113fc1a2fc7cb5320b3952885"
+  },
+  "nodeGroups": [],
+  "id": "TgCrVY00Sy1VQ95w",
+  "tags": [
+    {
+      "name": "shipment-tracker",
+      "id": "38AxBquEZxOfzTff",
+      "updatedAt": "2026-11-14T17:54:52.542Z",
+      "createdAt": "2026-11-14T17:54:52.542Z"
+    }
+  ]
 }
