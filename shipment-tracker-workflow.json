@@ -222,7 +222,7 @@
     },
     {
       "parameters": {
-        "chatId": "1955290878",
+        "chatId": "1526626514",
         "text": "={{ $json.telegramMessage }}",
         "additionalFields": {
           "disable_web_page_preview": false,
@@ -240,8 +240,8 @@
       "webhookId": "435390f1-2509-4687-92fc-bbad72a7f8f6",
       "credentials": {
         "telegramApi": {
-          "id": "uh0euwxsvOlzfDZe",
-          "name": "Telegram account"
+          "id": "Hzc4x4K0Nx3w8WJp",
+          "name": "ttlshipment_bot"
         }
       }
     },
@@ -413,7 +413,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "3516d16a-31a3-44c0-8422-b966d6506d31",
+  "versionId": "15566ea9-10ae-4447-9845-6167e799c75c",
   "meta": {
     "instanceId": "854b70a357560a8299a82e913a29585f0911176113fc1a2fc7cb5320b3952885"
   },
@@ -421,10 +421,10 @@
   "id": "TgCrVY00Sy1VQ95w",
   "tags": [
     {
-      "name": "shipment-tracker",
-      "id": "38AxBquEZxOfzTff",
       "updatedAt": "2026-11-14T17:54:52.542Z",
-      "createdAt": "2026-11-14T17:54:52.542Z"
+      "createdAt": "2026-11-14T17:54:52.542Z",
+      "id": "38AxBquEZxOfzTff",
+      "name": "shipment-tracker"
     }
   ]
 }
