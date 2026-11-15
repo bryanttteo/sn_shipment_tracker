@@ -247,7 +247,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Persist new fingerprint to Static Data\nconst staticData = $getWorkflowStaticData('global');\nstaticData[$input.item.json.storageKey] = $input.item.json.currentFingerprint;\nconsole.log(`[Tracker] Stored new fingerprint for ${$input.item.json.shipmentId}`);\nreturn $input.item;"
+        "jsCode": "// Persist new fingerprint to Static Data\nconst staticData = $getWorkflowStaticData('global');\nconst shipment = $('Check For Update').item.json;\n\nif (shipment && shipment.storageKey && shipment.currentFingerprint) {\n  staticData[shipment.storageKey] = shipment.currentFingerprint;\n}\n\nreturn $input.item;"
       },
       "id": "1ef3f581-f015-4ad6-aaca-52922cb8964f",
       "name": "Store New Fingerprint",
@@ -408,12 +408,12 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "15566ea9-10ae-4447-9845-6167e799c75c",
+  "versionId": "e02f41af-09f0-4775-afbc-76c4232a3325",
   "meta": {
     "instanceId": "854b70a357560a8299a82e913a29585f0911176113fc1a2fc7cb5320b3952885"
   },
